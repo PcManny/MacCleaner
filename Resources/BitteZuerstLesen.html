@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>MacCleaner – Bitte zuerst lesen</title>
+<style>
+  :root { color-scheme: light dark; --accent: #1a73e8; --muted: #6b6b6b; --box: #f2f5fa; }
+  @media (prefers-color-scheme: dark) { :root { --muted: #a0a0a0; --box: #23272e; --accent: #6aa8ff; } }
+  body { font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; max-width: 680px; margin: 48px auto; padding: 0 24px; }
+  h1 { font-size: 30px; margin-bottom: 4px; }
+  .sub { color: var(--muted); margin-top: 0; }
+  h2 { font-size: 21px; margin-top: 36px; }
+  ol { padding-left: 0; list-style: none; counter-reset: step; }
+  ol li { counter-increment: step; position: relative; padding: 12px 14px 12px 56px; margin: 10px 0; background: var(--box); border-radius: 12px; }
+  ol li::before { content: counter(step); position: absolute; left: 14px; top: 11px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; text-align: center; line-height: 28px; }
+  .note { border-left: 4px solid var(--accent); padding: 4px 14px; color: var(--muted); }
+  b.ui { white-space: nowrap; }
+</style>
+</head>
+<body>
+<h1>MacCleaner</h1>
+<p class="sub">Aufräumen, Programme entfernen, Speicher finden und Sicherheit prüfen – für deinen Mac.</p>
+
+<h2>Voraussetzungen</h2>
+<p>macOS 15 (Sequoia) oder neuer. Läuft auf Macs mit Apple-Chip und auf Intel-Macs.</p>
+
+<h2>1 · Installieren</h2>
+<ol>
+  <li>Ziehe <b>MacCleaner</b> aus diesem Ordner in den Ordner <b class="ui">Programme</b> (im Finder links in der Seitenleiste).</li>
+</ol>
+
+<h2>2 · Beim ersten Öffnen: Warnung überspringen</h2>
+<p>MacCleaner ist ein privat gebautes Programm und nicht von Apple geprüft. macOS zeigt deshalb beim ersten Start eine Warnung. Das ist normal und nur <b>einmal</b> nötig:</p>
+<ol>
+  <li>MacCleaner im Ordner Programme <b>doppelklicken</b>. Es erscheint die Meldung, dass MacCleaner nicht geöffnet wurde. Auf <b class="ui">Fertig</b> klicken – <b>nicht</b> auf „In den Papierkorb legen“.</li>
+  <li><b class="ui">Apfel-Menü  → Systemeinstellungen</b> öffnen, links <b class="ui">Datenschutz &amp; Sicherheit</b> wählen.</li>
+  <li>Ganz nach unten scrollen. Bei „MacCleaner wurde blockiert …“ auf <b class="ui">Dennoch öffnen</b> klicken (heißt manchmal auch „Trotzdem öffnen“) und mit Passwort oder Touch ID bestätigen.</li>
+  <li>Im nächsten Fenster noch einmal <b class="ui">Öffnen</b> klicken. Fertig – ab jetzt startet MacCleaner ganz normal.</li>
+</ol>
+
+<h2>3 · Zugriff erlauben (empfohlen)</h2>
+<p>Damit MacCleaner auch den Papierkorb leeren und alle Bereiche prüfen kann:</p>
+<ol>
+  <li>Systemeinstellungen → <b class="ui">Datenschutz &amp; Sicherheit</b> → <b class="ui">Festplattenvollzugriff</b>.</li>
+  <li>Unten auf <b class="ui">+</b> klicken, im Ordner Programme <b>MacCleaner</b> wählen und auf <b class="ui">Öffnen</b> klicken.</li>
+  <li>Schalter bei MacCleaner einschalten und MacCleaner neu starten.</li>
+</ol>
+<p class="note">Die gleiche Anleitung findest du später auch in MacCleaner unter <b>Einstellungen</b>.</p>
+
+<h2>So arbeitet MacCleaner</h2>
+<p>MacCleaner sitzt oben in der Menüleiste (Symbol ✨ mit freiem Speicher). Es löscht nie direkt – alles landet zuerst im Papierkorb. Es werden keine Daten ins Internet gesendet.</p>
+
+<h2>Fragen, Probleme oder Ideen?</h2>
+<!--KONTAKT--><p>Frag einfach die Person, von der du MacCleaner bekommen hast – oder melde dich auf <a href="https://github.com/PcManny/MacCleaner/issues">GitHub unter „Issues“</a>.</p><!--/KONTAKT-->
+</body>
+</html>

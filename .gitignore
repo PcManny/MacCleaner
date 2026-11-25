@@ -1,0 +1,14 @@
+# Gebaute Dateien
+.build/
+build/
+*.zip
+
+# macOS
+.DS_Store
+
+# Persönliche Projektnotizen – nicht veröffentlichen
+CLAUDE.md
+.claude/
+
+# Private Kontaktdaten (nur für die Familien-Version)
+Resources/Kontakt-privat.plist
