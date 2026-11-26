@@ -321,7 +321,6 @@ struct MaintenanceView: View {
 // MARK: - Settings
 
 struct SettingsView: View {
-    @AppStorage("showFree") private var showFree = true
     @AppStorage("monitor") private var monitor = true
     @State private var login = LoginItem.enabled
     @State private var loginError: String?
@@ -358,7 +357,6 @@ struct SettingsView: View {
                         Text("Dafür muss MacCleaner im Ordner „Programme“ liegen.").font(.caption).foregroundStyle(.secondary)
                     }
                     if let e = loginError { Text(e).font(.caption).foregroundStyle(.red) }
-                    Toggle("Freien Speicher in der Menüleiste anzeigen", isOn: $showFree)
                     Toggle("Neue Autostart-Einträge überwachen und melden", isOn: $monitor)
                 }
                 Section("Festplattenvollzugriff") {

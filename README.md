@@ -7,7 +7,7 @@ Selbst gebaut, für Familie und Freunde gedacht, für alle freigegeben.
 
 ## Was MacCleaner kann
 
-- **Menüleiste:** freier Speicher, Sicherheitsstatus, Arbeitsspeicher und Malware-Status auf einen Blick
+- **Menüleiste:** eigenes Symbol; per Klick freier Speicher, Sicherheitsstatus, Arbeitsspeicher und Malware-Status auf einen Blick
 - **Aufräumen:** Programm-Caches, Protokolle, Xcode- und Entwickler-Caches, alte Downloads, Mail-Anhänge, iPhone-Backups, Papierkorb leeren
 - **Programme entfernen:** App samt Einstellungen, Caches und Hintergrunddiensten – dazu „Reste ohne Programm“ von früher gelöschten Apps
 - **Speicherfresser:** Ordnergrößen zum Durchklicken, große Dateien, doppelte Dateien

@@ -94,16 +94,15 @@ struct MacCleanerApp: App {
 // MARK: - Menu bar
 
 struct MenuLabel: View {
-    @ObservedObject var disk = DiskModel.shared
     @ObservedObject var sec = SecurityModel.shared
-    @AppStorage("showFree") var showFree = true
     @Environment(\.openWindow) var openWindow
 
     var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: sec.newItems.isEmpty ? "sparkles" : "exclamationmark.shield.fill")
-            if showFree, disk.total > 0 {
-                Text(Fmt.gigabytes(disk.free))
+        Group {
+            if sec.newItems.isEmpty {
+                Image(nsImage: MenuBarIcon.image)
+            } else {
+                Image(systemName: "exclamationmark.shield.fill")
             }
         }
         .onAppear {
