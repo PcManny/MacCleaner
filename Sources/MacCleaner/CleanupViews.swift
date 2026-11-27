@@ -237,10 +237,30 @@ struct CleanupView: View {
                 Task { await m.clean() }
             }
         } message: {
-            Text(m.trashSelected
+            Text((m.trashSelected
                  ? "\(Fmt.bytes(m.selectedTotal)) werden entfernt und der Papierkorb wird endgültig geleert. Das lässt sich nicht rückgängig machen."
                  : "\(Fmt.bytes(m.selectedTotal)) werden in den Papierkorb gelegt. Du kannst sie von dort zurückholen.")
+                 + "\n\nAngehakt: " + m.categories.filter(\.selected).map(\.name).joined(separator: ", "))
         }
+    }
+}
+
+/// Eigenes Ankreuzkästchen: ein schlichter Knopf, der bei jedem Klick sicher an/aus schaltet.
+struct CheckBox: View {
+    @Binding var isOn: Bool
+    var size: CGFloat = 16
+
+    var body: some View {
+        Button { isOn.toggle() } label: {
+            Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                .font(.system(size: size))
+                .foregroundStyle(isOn ? Color.accentColor : Color.secondary)
+                .frame(width: size + 8, height: size + 8)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(isOn ? "Abwählen" : "Auswählen")
+        .accessibilityAddTraits(isOn ? .isSelected : [])
     }
 }
 
@@ -251,7 +271,7 @@ struct CategoryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 12) {
-                Toggle("", isOn: $c.selected).toggleStyle(.checkbox).labelsHidden().padding(.top, 4)
+                CheckBox(isOn: Binding(get: { c.selected }, set: { $c.wrappedValue.setAll($0) }), size: 18).padding(.top, 4)
                 Image(systemName: c.icon).font(.title2).frame(width: 30).foregroundStyle(.tint)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(c.name).font(.headline)
@@ -271,12 +291,18 @@ struct CategoryRow: View {
                 }
             }
             if expanded {
+                HStack(spacing: 12) {
+                    Button("Alle anhaken") { $c.wrappedValue.setAll(true) }
+                    Button("Keine") { $c.wrappedValue.setAll(false) }
+                }
+                .buttonStyle(.link).font(.caption)
+                .padding(.leading, 76)
                 ForEach(c.items.prefix(200)) { item in
                     HStack {
-                        Toggle("", isOn: Binding(
-                            get: { !c.excluded.contains(item.id) },
-                            set: { on in if on { c.excluded.remove(item.id) } else { c.excluded.insert(item.id) } }
-                        )).toggleStyle(.checkbox).labelsHidden()
+                        CheckBox(isOn: Binding(
+                            get: { c.isItemOn(item.id) },
+                            set: { $c.wrappedValue.setItem(item.id, on: $0) }
+                        ), size: 14)
                         Text(item.url.lastPathComponent).lineLimit(1).truncationMode(.middle)
                         Spacer()
                         Text(Fmt.bytes(item.size)).monospacedDigit().foregroundStyle(.secondary)

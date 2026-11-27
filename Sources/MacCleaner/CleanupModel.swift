@@ -49,6 +49,29 @@ struct CleanCategory: Identifiable {
     var total: Int64 { items.reduce(0) { $0 + $1.size } }
     var selectedItems: [CleanItem] { items.filter { !excluded.contains($0.id) } }
     var selectedSize: Int64 { selectedItems.reduce(0) { $0 + $1.size } }
+
+    /// Ein einzelner Eintrag zählt nur, wenn auch der ganze Bereich angehakt ist.
+    func isItemOn(_ id: String) -> Bool { selected && !excluded.contains(id) }
+
+    /// Kleines Kästchen geklickt: großes Kästchen passt sich an.
+    mutating func setItem(_ id: String, on: Bool) {
+        if on {
+            if !selected {            // erster Haken in einem leeren Bereich: nur diesen einen nehmen
+                selected = true
+                excluded = Set(items.map(\.id))
+            }
+            excluded.remove(id)
+        } else {
+            excluded.insert(id)
+            if items.allSatisfy({ excluded.contains($0.id) }) { selected = false; excluded = [] }
+        }
+    }
+
+    /// Großes Kästchen geklickt: alle Einträge an oder aus.
+    mutating func setAll(_ on: Bool) {
+        selected = on
+        excluded = []
+    }
 }
 
 @MainActor
