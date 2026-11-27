@@ -214,9 +214,16 @@ struct UninstallView: View {
                     }
                     .pickerStyle(.segmented).labelsHidden().frame(width: 110)
                 }
-                .padding(8)
-                List(m.filtered, selection: Binding(get: { m.selection }, set: { id in Task { await m.select(id) } })) { app in
+                .padding(.horizontal, 8).padding(.top, 8)
+                Text("Mehrere Programme: Kästchen ankreuzen")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 10).padding(.vertical, 4)
+                List(m.filtered, selection: Binding(get: { m.selection }, set: { ids in Task { await m.select(ids) } })) { app in
                     HStack {
+                        Toggle("", isOn: Binding(get: { m.selection.contains(app.id) },
+                                                 set: { _ in Task { await m.toggle(app.id) } }))
+                            .toggleStyle(.checkbox).labelsHidden()
+                            .help("Ankreuzen, um mehrere Programme auf einmal zu entfernen")
                         Image(nsImage: appIcon(app.url.path)).resizable().frame(width: 24, height: 24)
                         Text(app.name).lineLimit(1)
                         Spacer()
@@ -231,14 +238,29 @@ struct UninstallView: View {
     }
 
     @ViewBuilder private var detail: some View {
-        if let app = m.selectedApp {
+        let chosen = m.selectedApps
+        if !chosen.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 14) {
-                    Image(nsImage: appIcon(app.url.path)).resizable().frame(width: 60, height: 60)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(app.name).font(.title2.bold())
-                        Text(app.bundleID ?? "ohne Kennung").foregroundStyle(.secondary)
-                        Text(app.url.path).font(.caption).foregroundStyle(.secondary)
+                if let app = m.selectedApp {
+                    HStack(spacing: 14) {
+                        Image(nsImage: appIcon(app.url.path)).resizable().frame(width: 60, height: 60)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(app.name).font(.title2.bold())
+                            Text(app.bundleID ?? "ohne Kennung").foregroundStyle(.secondary)
+                            Text(app.url.path).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    Text("\(chosen.count) Programme ausgewählt").font(.title2.bold())
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(chosen) { app in
+                                VStack(spacing: 4) {
+                                    Image(nsImage: appIcon(app.url.path)).resizable().frame(width: 44, height: 44)
+                                    Text(app.name).font(.caption).lineLimit(1).frame(maxWidth: 90)
+                                }
+                            }
+                        }
                     }
                 }
                 Text("Gefundene Reste").font(.headline)
@@ -254,20 +276,22 @@ struct UninstallView: View {
                     if let msg = m.message { Text(msg).foregroundStyle(.secondary) }
                     Spacer()
                     Text("Gesamt: \(Fmt.bytes(m.uninstallTotal))").bold()
-                    Button("Deinstallieren …", role: .destructive) { confirm = true }
+                    Button(chosen.count == 1 ? "Deinstallieren …" : "\(chosen.count) Programme deinstallieren …", role: .destructive) { confirm = true }
                         .buttonStyle(.borderedProminent).tint(.red).disabled(m.busy)
                 }
             }
             .padding(16)
-            .confirmationDialog("\(app.name) deinstallieren?", isPresented: $confirm) {
+            .confirmationDialog(chosen.count == 1 ? "\(chosen[0].name) deinstallieren?" : "\(chosen.count) Programme deinstallieren?",
+                                isPresented: $confirm) {
                 Button("In den Papierkorb legen", role: .destructive) { Task { await m.uninstall() } }
             } message: {
-                Text("Das Programm und \(m.leftovers.filter(\.selected).count) ausgewählte Reste werden in den Papierkorb gelegt. Läuft das Programm, wird es vorher beendet. Für Systemdateien fragt macOS nach deinem Passwort.")
+                Text((chosen.count == 1 ? "Das Programm" : chosen.map(\.name).joined(separator: ", "))
+                     + " und \(m.leftovers.filter(\.selected).count) ausgewählte Reste werden in den Papierkorb gelegt. Laufende Programme werden vorher beendet. Für Systemdateien fragt macOS nach deinem Passwort.")
             }
         } else {
             VStack {
                 ContentUnavailableView("Programm auswählen", systemImage: "app.dashed",
-                                       description: Text("Wähle links ein Programm aus, um es samt Resten zu entfernen."))
+                                       description: Text("Wähle links ein Programm aus – oder kreuze mehrere an –, um sie samt Resten zu entfernen."))
                 if let msg = m.message { Text(msg).foregroundStyle(.secondary).padding() }
             }
         }

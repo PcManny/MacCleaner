@@ -155,7 +155,7 @@ final class UninstallModel: ObservableObject {
 
     @Published var apps: [AppEntry] = []
     @Published var sizes: [String: Int64] = [:]
-    @Published var selection: AppEntry.ID?
+    @Published var selection: Set<AppEntry.ID> = []
     @Published var leftovers: [Leftover] = []
     @Published var orphans: [Leftover] = []
     @Published var busy = false
@@ -165,7 +165,9 @@ final class UninstallModel: ObservableObject {
     @Published var search = ""
     @Published var sortBySize = false
 
-    var selectedApp: AppEntry? { apps.first { $0.id == selection } }
+    /// Selected apps in list order.
+    var selectedApps: [AppEntry] { apps.filter { selection.contains($0.id) } }
+    var selectedApp: AppEntry? { selectedApps.count == 1 ? selectedApps.first : nil }
 
     var filtered: [AppEntry] {
         let list = search.isEmpty ? apps : apps.filter { $0.name.localizedCaseInsensitiveContains(search) }
@@ -173,7 +175,7 @@ final class UninstallModel: ObservableObject {
     }
 
     var uninstallTotal: Int64 {
-        (selectedApp.flatMap { sizes[$0.id] } ?? 0) + leftovers.filter(\.selected).reduce(0) { $0 + $1.size }
+        selectedApps.reduce(0) { $0 + (sizes[$1.id] ?? 0) } + leftovers.filter(\.selected).reduce(0) { $0 + $1.size }
     }
 
     var orphanTotal: Int64 { orphans.filter(\.selected).reduce(0) { $0 + $1.size } }
@@ -184,36 +186,57 @@ final class UninstallModel: ObservableObject {
         sizes = await DiskUsage.sizes(list.map(\.url.path))
     }
 
-    func select(_ id: AppEntry.ID?) async {
-        selection = id
+    func select(_ ids: Set<AppEntry.ID>) async {
+        selection = ids
         message = nil
         leftovers = []
-        guard let app = selectedApp else { return }
+        let chosen = selectedApps
+        guard !chosen.isEmpty else { busy = false; return }
         busy = true
-        let found = await Task.detached { AppScanner.leftovers(for: app) }.value
+        let found = await Task.detached { () -> [(URL, String, Bool)] in
+            var seen = Set<String>()
+            var all: [(URL, String, Bool)] = []
+            for app in chosen {
+                for f in AppScanner.leftovers(for: app) where seen.insert(f.0.path).inserted {
+                    // With several apps, say which program each leftover belongs to.
+                    all.append(chosen.count > 1 ? (f.0, "\(app.name): \(f.1)", f.2) : f)
+                }
+            }
+            return all
+        }.value
         let s = await DiskUsage.sizes(found.map { $0.0.path })
-        guard selection == app.id else { return }
-        busy = false
+        guard selection == ids else { return }
         leftovers = found.map { Leftover(url: $0.0, size: s[$0.0.path] ?? 0, note: $0.1, selected: $0.2) }
             .sorted { $0.selected != $1.selected ? $0.selected : $0.size > $1.size }
         busy = false
     }
 
+    func toggle(_ id: AppEntry.ID) async {
+        var ids = selection
+        if ids.contains(id) { ids.remove(id) } else { ids.insert(id) }
+        await select(ids)
+    }
+
     func uninstall() async {
-        guard let app = selectedApp else { return }
+        let chosen = selectedApps
+        guard !chosen.isEmpty else { return }
         busy = true
-        if let bid = app.bundleID {
+        var waited = false
+        for app in chosen {
+            guard let bid = app.bundleID else { continue }
             for running in NSRunningApplication.runningApplications(withBundleIdentifier: bid) {
                 running.terminate()
+                waited = true
             }
-            try? await Task.sleep(for: .seconds(1.5))
         }
-        let urls = [app.url] + leftovers.filter(\.selected).map(\.url)
+        if waited { try? await Task.sleep(for: .seconds(1.5)) }
+        let urls = chosen.map(\.url) + leftovers.filter(\.selected).map(\.url)
         let error = await Remover.moveToTrash(urls)
         busy = false
-        message = error ?? "\(app.name) wurde in den Papierkorb gelegt."
+        message = error ?? (chosen.count == 1 ? "\(chosen[0].name) wurde in den Papierkorb gelegt."
+                                             : "\(chosen.count) Programme wurden in den Papierkorb gelegt.")
         if error == nil {
-            selection = nil
+            selection = []
             leftovers = []
         }
         await loadApps()
