@@ -64,16 +64,6 @@ final class Nav: ObservableObject {
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
-        if CommandLine.arguments.contains("--package") {
-            Task {
-                switch await SharePackage.create() {
-                case .success(let url): print("Paket: \(url.path)")
-                case .failure(let msg): print("Fehler: \(msg)")
-                }
-                exit(0)
-            }
-            return
-        }
         if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLine.arguments.count {
             // Developer aid: render the overview card and sidebar into a PNG.
             let out = CommandLine.arguments[i + 1]

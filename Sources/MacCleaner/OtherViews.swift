@@ -328,9 +328,7 @@ struct SettingsView: View {
     @State private var loginError: String?
 
     @State private var fullDiskAccess = Remover.hasFullDiskAccess
-    @State private var sharing = false
-    @State private var shareResult: String?
-    @State private var shareURL: URL?
+    @State private var copied = false
 
     private var inApplications: Bool { Bundle.main.bundlePath.hasPrefix("/Applications/") }
 
@@ -383,30 +381,21 @@ struct SettingsView: View {
                     }
                 }
                 Section("An Familie & Freunde weitergeben") {
-                    Text("Erstellt eine ZIP-Datei auf dem Schreibtisch mit MacCleaner und der Anleitung „Bitte zuerst lesen“. Die erklärt, wie man die Warnung beim ersten Öffnen überspringt – die erscheint nämlich, bevor MacCleaner startet. Läuft ab macOS 15 auf Apple-Chip- und Intel-Macs.")
+                    Text("MacCleaner ist kostenlos und darf gern weitergegeben werden. Am besten schickst du den Download-Link – er lädt immer die neueste Version, und MacCleaner startet beim Empfänger ohne Warnung. Läuft ab macOS 15 auf Apple-Chip- und Intel-Macs.")
                         .foregroundStyle(.secondary)
+                    Link(AppLinks.download, destination: URL(string: AppLinks.download)!).font(.callout)
                     HStack {
-                        Button("Weitergabe-Paket erstellen") {
-                            sharing = true
-                            shareResult = nil
-                            Task {
-                                switch await SharePackage.create() {
-                                case .success(let url): shareURL = url; shareResult = "Fertig: „\(url.lastPathComponent)“ liegt auf dem Schreibtisch. Per AirDrop, USB-Stick oder E-Mail weitergeben."
-                                case .failure(let msg): shareURL = nil; shareResult = msg
-                                }
-                                sharing = false
-                            }
+                        ShareLink(item: URL(string: AppLinks.download)!,
+                                  subject: Text("MacCleaner – kostenloser Mac-Aufräumer"),
+                                  message: Text("Schau mal, MacCleaner räumt den Mac kostenlos auf – ohne Abo und ohne Werbung. Am Mac öffnen, die Datei doppelklicken und MacCleaner in „Programme“ ziehen (ab macOS 15):")) {
+                            Label("Link teilen …", systemImage: "square.and.arrow.up")
                         }
-                        .disabled(sharing)
-                        if sharing { ProgressView().controlSize(.small) }
-                        Button("Anleitung ansehen") {
-                            if let u = Bundle.main.url(forResource: "BitteZuerstLesen", withExtension: "html") { NSWorkspace.shared.open(u) }
-                        }
-                    }
-                    if let r = shareResult {
-                        HStack {
-                            Text(r).foregroundStyle(shareURL == nil ? .red : .green)
-                            if let u = shareURL { Button("Im Finder zeigen") { reveal(u) } }
+                        Button {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(AppLinks.download, forType: .string)
+                            copied = true
+                        } label: {
+                            Label(copied ? "Kopiert" : "Link kopieren", systemImage: copied ? "checkmark" : "doc.on.doc")
                         }
                     }
                 }

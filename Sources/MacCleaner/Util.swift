@@ -292,6 +292,8 @@ enum LoginItem {
 enum AppLinks {
     /// Project page on GitHub (issues = bug reports and ideas).
     static let project = "https://github.com/PcManny/MacCleaner"
+    /// Always the newest signed and notarized disk image.
+    static let download = project + "/releases/latest/download/MacCleaner.dmg"
 
     /// Private version only: name and e-mail from Kontakt.plist in the app (build.sh adds it
     /// when Resources/Kontakt-privat.plist exists and the build is not --public).
