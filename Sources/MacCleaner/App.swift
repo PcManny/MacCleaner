@@ -70,6 +70,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in await Snapshot.write(to: out); exit(0) }
             return
         }
+        if let i = CommandLine.arguments.firstIndex(of: "--snapshot-access"), i + 1 < CommandLine.arguments.count {
+            let out = CommandLine.arguments[i + 1]
+            Task { @MainActor in Snapshot.writeAccess(to: out); exit(0) }
+            return
+        }
         if CommandLine.arguments.contains("--selftest") {
             Task { await SelfTest.run(); exit(0) }
             return
@@ -126,6 +131,10 @@ struct MenuLabel: View {
             if !UserDefaults.standard.bool(forKey: "didLaunch") {
                 UserDefaults.standard.set(true, forKey: "didLaunch")
                 Nav.shared.show(.overview)
+            }
+            let args = CommandLine.arguments
+            if !args.contains(where: { $0 == "--selftest" || $0.hasPrefix("--snapshot") }) {
+                AccessModel.shared.checkAtLaunch()
             }
         }
     }
@@ -216,6 +225,7 @@ struct MenuPopover: View {
 struct MainView: View {
     @ObservedObject var nav = Nav.shared
     @ObservedObject var sec = SecurityModel.shared
+    @ObservedObject var access = AccessModel.shared
 
     var body: some View {
         NavigationSplitView {
@@ -243,5 +253,6 @@ struct MainView: View {
             }
         }
         .tint(Brand.blue)
+        .sheet(isPresented: $access.showSetup) { AccessSetupView() }
     }
 }

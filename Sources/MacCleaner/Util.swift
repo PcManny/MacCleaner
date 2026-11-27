@@ -277,6 +277,8 @@ enum SettingsPane {
     static let camera = privacy + "?Privacy_Camera"
 
     static func open(_ s: String) {
+        // Touch a protected file first, so MacCleaner already shows up in the list.
+        if s == fullDisk { AccessModel.register() }
         if let u = URL(string: s) { NSWorkspace.shared.open(u) }
     }
 }

@@ -328,6 +328,7 @@ struct SettingsView: View {
     @State private var loginError: String?
 
     @State private var fullDiskAccess = Remover.hasFullDiskAccess
+    @ObservedObject private var access = AccessModel.shared
     @State private var copied = false
 
     private var inApplications: Bool { Bundle.main.bundlePath.hasPrefix("/Applications/") }
@@ -366,16 +367,9 @@ struct SettingsView: View {
                     } else {
                         Label("Fehlt – Papierkorb, Mail-Anhänge und iPhone-Backups werden übersprungen.", systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("1. Auf „Einstellungen öffnen“ klicken.")
-                            Text("2. Unten auf „+“ klicken (ggf. mit Passwort/Touch ID bestätigen).")
-                            Text("3. Im Ordner „Programme“ MacCleaner auswählen und „Öffnen“ klicken.")
-                            Text("4. Schalter bei MacCleaner einschalten, dann hier „MacCleaner neu starten“.")
-                        }
-                        .foregroundStyle(.secondary)
                         HStack {
-                            Button("Einstellungen öffnen …") { SettingsPane.open(SettingsPane.fullDisk) }
-                            Button("Programme-Ordner zeigen") { reveal(URL(fileURLWithPath: Bundle.main.bundlePath)) }
+                            Button("Jetzt erlauben …") { AccessModel.shared.ask() }
+                                .buttonStyle(.borderedProminent)
                             Button("MacCleaner neu starten") { relaunch() }
                         }
                     }
@@ -421,6 +415,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
             .onAppear { fullDiskAccess = Remover.hasFullDiskAccess }
+            .onChange(of: access.granted) { fullDiskAccess = Remover.hasFullDiskAccess }
         }
     }
 }
