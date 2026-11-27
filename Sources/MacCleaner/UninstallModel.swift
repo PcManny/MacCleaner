@@ -63,11 +63,11 @@ enum AppScanner {
         let parts = bid?.split(separator: ".") ?? []
         let vendor = parts.count >= 3 ? parts.prefix(2).joined(separator: ".") : nil
 
-        // Name variants: "CleanMyMac_5" also stands for "cleanmymac 5" and "cleanmymac5".
+        // Name variants: "Beispiel_5" also stands for "beispiel 5" and "beispiel5".
         let names = Set([name, compact, name.replacingOccurrences(of: "_", with: " "),
                          name.replacingOccurrences(of: "_", with: ""), name.replacingOccurrences(of: " ", with: "_")])
         let separators = [" ", "_", "-", "."]
-        // Same product, other version: com.macpaw.cleanmymac5 → com.macpaw.cleanmymac4.menu
+        // Same product, other version: com.hersteller.produkt5 → com.hersteller.produkt4.menu
         var family: String?
         if let bid, parts.count >= 3, let last = parts.last {
             let base = String(last.reversed().drop(while: \.isNumber).reversed())
@@ -101,7 +101,7 @@ enum AppScanner {
         return out
     }
 
-    /// "com.macpaw.cleanmymac4.menu" with family "com.macpaw.cleanmymac" → "com.macpaw.cleanmymac4".
+    /// "com.hersteller.produkt4.menu" with family "com.hersteller.produkt" → "com.hersteller.produkt4".
     static func otherVersionID(_ s: String, family: String) -> String? {
         guard s.hasPrefix(family) else { return nil }
         let rest = s.dropFirst(family.count)

@@ -26,25 +26,44 @@ if [[ "${1:-}" != "--public" && -f Resources/Kontakt-privat.plist ]]; then
 fi
 # Mit dem Xcode-Entwicklerzertifikat signieren, damit macOS erteilte Berechtigungen
 # (z. B. Festplattenvollzugriff) nach einem Neubau behält. Ohne Zertifikat: ad-hoc.
-# --public: ohne persönliches Zertifikat (ad-hoc), damit kein Name/keine E-Mail in der App steht,
-# und dazu ein ZIP für GitHub (App + Anleitung) in build/.
+# --public: mit dem „Developer ID Application“-Zertifikat (bezahltes Apple-Konto) unterschreiben
+# und von Apple beglaubigen lassen (Notarisierung) – dann startet die App ohne Warnung.
+# Ohne dieses Zertifikat: ad-hoc wie früher. Dazu ein ZIP für GitHub (App + Anleitung) in build/.
+NOTARY_PROFILE="MacCleaner-Notar"   # angelegt mit: xcrun notarytool store-credentials
 if [[ "${1:-}" == "--public" ]]; then
-    IDENTITY="-"
+    IDENTITY=$(security find-identity -v -p codesigning | awk '/Developer ID Application/ {print $2; exit}')
+    IDENTITY="${IDENTITY:--}"
 else
     IDENTITY=$(security find-identity -v -p codesigning | awk '/Apple Development/ {print $2; exit}')
 fi
-codesign --force --options runtime --sign "${IDENTITY:--}" "$APP"
+if [[ "${IDENTITY:--}" == "-" ]]; then
+    codesign --force --options runtime --sign - "$APP"
+else
+    codesign --force --options runtime --timestamp --sign "$IDENTITY" "$APP"
+fi
 echo "Fertig: $APP"
 
 if [[ "${1:-}" == "--public" ]]; then
     STAGE="build/zip/MacCleaner"
     rm -rf build/zip build/MacCleaner.zip
+    if [[ "$IDENTITY" != "-" ]] && xcrun notarytool history --keychain-profile "$NOTARY_PROFILE" >/dev/null 2>&1; then
+        echo "Wird bei Apple beglaubigt (dauert meist 1–5 Minuten) …"
+        ditto -c -k --keepParent "$APP" build/notar.zip
+        xcrun notarytool submit build/notar.zip --keychain-profile "$NOTARY_PROFILE" --wait | tee build/notar.log
+        rm -f build/notar.zip
+        grep -q "status: Accepted" build/notar.log || { echo "Beglaubigung fehlgeschlagen – siehe build/notar.log"; exit 1; }
+        xcrun stapler staple "$APP"
+        spctl -a -vv -t exec "$APP"
+    else
+        echo "Hinweis: ohne Beglaubigung (kein Developer-ID-Zertifikat oder kein Notar-Profil)."
+    fi
     mkdir -p "$STAGE"
     cp -R "$APP" "$STAGE/"
     cp Resources/BitteZuerstLesen.html "$STAGE/Bitte zuerst lesen.html"
     ditto -c -k --sequesterRsrc --keepParent "$STAGE" build/MacCleaner.zip
+    NOTARY_PROFILE="$NOTARY_PROFILE" Tools/make_dmg.sh "$APP" build/MacCleaner.dmg Resources/dmg-background.png "$STAGE/Bitte zuerst lesen.html"
     rm -rf build/zip
-    echo "Öffentliches Paket: build/MacCleaner.zip"
+    echo "Öffentliche Pakete: build/MacCleaner.zip und build/MacCleaner.dmg"
 fi
 
 if [[ "${1:-}" == "--install" ]]; then

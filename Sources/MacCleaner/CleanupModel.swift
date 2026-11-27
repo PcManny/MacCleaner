@@ -66,6 +66,38 @@ final class CleanupModel: ObservableObject {
         categories.filter { $0.selected }.reduce(0) { $0 + $1.selectedSize }
     }
 
+    /// Categories that are always safe to clean: they are rebuilt automatically.
+    static let safeIDs: Set<String> = ["caches", "logs", "xcode"]
+    var safeCategories: [CleanCategory] { categories.filter { Self.safeIDs.contains($0.id) && !$0.items.isEmpty } }
+    var safeTotal: Int64 { safeCategories.reduce(0) { $0 + $1.total } }
+    var trashTotal: Int64 { categories.first { $0.kind == .emptyTrash }?.total ?? 0 }
+    @Published var quickMessage: String?
+
+    /// "Alles aufräumen": only the safe categories, all their items. Optionally empty the Trash afterwards.
+    func quickClean(emptyTrash: Bool) async {
+        guard !cleaning else { return }
+        cleaning = true
+        quickMessage = nil
+        let freed = safeTotal
+        var error = await Remover.moveToTrash(safeCategories.flatMap { $0.items.map(\.url) })
+        if emptyTrash {
+            switch await Remover.emptyTrash() {
+            case .done: break
+            case .noAccess:
+                needsFullDiskAccess = true
+                error = "Der Papierkorb konnte nicht geleert werden, weil MacCleaner der Festplattenvollzugriff fehlt (siehe Einstellungen)."
+            case .failed(let names):
+                error = "Einiges im Papierkorb wurde nicht gelöscht (\(names.prefix(2).joined(separator: ", "))…)."
+            }
+        }
+        cleaning = false
+        quickMessage = error ?? (emptyTrash
+            ? "Fertig – \(Fmt.bytes(freed)) aufgeräumt und der Papierkorb ist leer."
+            : "Fertig – \(Fmt.bytes(freed)) liegen im Papierkorb. Leere ihn, um den Platz freizugeben.")
+        await scan()
+        DiskModel.shared.refresh()
+    }
+
     var trashSelected: Bool {
         categories.contains { $0.selected && $0.kind == .emptyTrash }
     }

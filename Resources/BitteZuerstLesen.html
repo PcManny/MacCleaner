@@ -15,6 +15,9 @@
   ol li::before { content: counter(step); position: absolute; left: 14px; top: 11px; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 600; text-align: center; line-height: 28px; }
   .note { border-left: 4px solid var(--accent); padding: 4px 14px; color: var(--muted); }
   b.ui { white-space: nowrap; }
+  a.btn { display: inline-block; margin-top: 8px; padding: 7px 16px; background: var(--accent); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+  a.btn:hover { filter: brightness(1.1); }
+  .small { font-size: 14px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -26,22 +29,26 @@
 
 <h2>1 · Installieren</h2>
 <ol>
-  <li>Ziehe <b>MacCleaner</b> aus diesem Ordner in den Ordner <b class="ui">Programme</b> (im Finder links in der Seitenleiste).</li>
+  <li>Ziehe <b>MacCleaner</b> in den Ordner <b class="ui">Programme</b> (im DMG-Fenster einfach auf den Ordner rechts ziehen, sonst im Finder links in der Seitenleiste).</li>
+  <li>MacCleaner im Ordner Programme <b>doppelklicken</b>. macOS fragt einmal, ob du ein Programm aus dem Internet öffnen möchtest – auf <b class="ui">Öffnen</b> klicken. Fertig.</li>
 </ol>
 
-<h2>2 · Beim ersten Öffnen: Warnung überspringen</h2>
-<p>MacCleaner ist ein privat gebautes Programm und nicht von Apple geprüft. macOS zeigt deshalb beim ersten Start eine Warnung. Das ist normal und nur <b>einmal</b> nötig:</p>
+<h2>2 · Falls macOS das Öffnen verweigert</h2>
+<p>Normalerweise passiert das nicht. Kommt aber die Meldung, dass MacCleaner <b>nicht geöffnet</b> wurde (z. B. bei einer von Hand weitergegebenen Version), ist das nur <b>einmal</b> nötig:</p>
 <ol>
-  <li>MacCleaner im Ordner Programme <b>doppelklicken</b>. Es erscheint die Meldung, dass MacCleaner nicht geöffnet wurde. Auf <b class="ui">Fertig</b> klicken – <b>nicht</b> auf „In den Papierkorb legen“.</li>
-  <li><b class="ui">Apfel-Menü  → Systemeinstellungen</b> öffnen, links <b class="ui">Datenschutz &amp; Sicherheit</b> wählen.</li>
-  <li>Ganz nach unten scrollen. Bei „MacCleaner wurde blockiert …“ auf <b class="ui">Dennoch öffnen</b> klicken (heißt manchmal auch „Trotzdem öffnen“) und mit Passwort oder Touch ID bestätigen.</li>
-  <li>Im nächsten Fenster noch einmal <b class="ui">Öffnen</b> klicken. Fertig – ab jetzt startet MacCleaner ganz normal.</li>
+  <li>In der Meldung auf <b class="ui">Fertig</b> klicken – <b>nicht</b> auf „In den Papierkorb legen“.</li>
+  <li>Auf diesen Knopf klicken – er öffnet die richtige Stelle in den Systemeinstellungen:<br>
+      <a class="btn" href="x-apple.systempreferences:com.apple.settings.PrivacySecurity.extension">Datenschutz &amp; Sicherheit öffnen</a><br>
+      <span class="small">Fragt der Browser, ob er „Systemeinstellungen“ öffnen darf, auf <b>Zulassen</b> klicken. Klappt der Knopf nicht: <b class="ui">Apfel-Menü  → Systemeinstellungen</b> öffnen, links <b class="ui">Datenschutz &amp; Sicherheit</b> wählen.</span></li>
+  <li>Ganz nach unten scrollen. Bei „MacCleaner wurde blockiert …“ auf <b class="ui">Dennoch öffnen</b> klicken und mit Passwort oder Touch ID bestätigen.</li>
 </ol>
 
 <h2>3 · Zugriff erlauben (empfohlen)</h2>
 <p>Damit MacCleaner auch den Papierkorb leeren und alle Bereiche prüfen kann:</p>
 <ol>
-  <li>Systemeinstellungen → <b class="ui">Datenschutz &amp; Sicherheit</b> → <b class="ui">Festplattenvollzugriff</b>.</li>
+  <li>Auf diesen Knopf klicken:<br>
+      <a class="btn" href="x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles">Festplattenvollzugriff öffnen</a><br>
+      <span class="small">Oder von Hand: Systemeinstellungen → <b class="ui">Datenschutz &amp; Sicherheit</b> → <b class="ui">Festplattenvollzugriff</b>.</span></li>
   <li>Unten auf <b class="ui">+</b> klicken, im Ordner Programme <b>MacCleaner</b> wählen und auf <b class="ui">Öffnen</b> klicken.</li>
   <li>Schalter bei MacCleaner einschalten und MacCleaner neu starten.</li>
 </ol>

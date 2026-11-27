@@ -1,6 +1,6 @@
 # MacCleaner
 
-Ein kostenloser Mac-Aufräumer mit Symbol in der Menüleiste – als einfacher Ersatz für Abo-Programme wie CleanMyMac.
+Ein kostenloser Mac-Aufräumer mit Symbol in der Menüleiste – anstelle einer Abo-App.
 Selbst gebaut, für Familie und Freunde gedacht, für alle freigegeben.
 
 *English summary below.*
@@ -14,6 +14,8 @@ Selbst gebaut, für Familie und Freunde gedacht, für alle freigegeben.
 - **Arbeitsspeicher:** Speicherdruck, größte Verbraucher (mit „Beenden“), Arbeitsspeicher freigeben
 - **Sicherheit:** SIP, Gatekeeper, FileVault, Firewall, Freigaben (SSH, Bildschirm, SMB), Profile/Fernverwaltung, Hosts-Datei, Proxy, Autostart mit Signaturprüfung, laufende Programme. Neue Autostart-Einträge werden alle 5 Minuten erkannt und gemeldet.
 - **Malware-Suche:** bekannte Werbe- und Schadprogramme, verdächtige Hintergrundprogramme, veränderte (z. B. gecrackte) Programme, Browser-Erweiterungen, Stand von Apples Virenschutz XProtect
+- **Meine Tools:** alle Werkzeuge als Kacheln mit Suche – u. a. Duplikatscanner, Downloads, Papierkorb, KI-Müll (Caches und Modelle von KI-Programmen), Time-Machine-Schnappschüsse, Programm-Berechtigungen (wer darf Kamera, Mikrofon, alle Dateien …), Hintergrundobjekte und ein Putzmodus für Bildschirm und Tastatur
+- **Übersicht:** Rundum-Check (Aufräumen, Sicherheit und Malware auf einen Klick) und „Alles aufräumen“ für die sicheren Kategorien
 - **Wartung:** DNS-Cache, Spotlight, Vorschau-Cache, „Öffnen mit“-Menü, Schriften-Cache, Dock/Finder neu starten
 
 ## Grundsätze
@@ -26,13 +28,15 @@ Selbst gebaut, für Familie und Freunde gedacht, für alle freigegeben.
 
 Voraussetzung: **macOS 15 (Sequoia) oder neuer**, Apple-Chip oder Intel.
 
-1. Unter **Releases** (rechts auf dieser Seite) die Datei `MacCleaner.zip` laden und doppelklicken.
-2. `MacCleaner.app` in den Ordner **Programme** ziehen.
-3. Die Datei **„Bitte zuerst lesen.html“** öffnen – sie erklärt Schritt für Schritt den ersten Start.
+1. Unter **Releases** (rechts auf dieser Seite) **`MacCleaner.dmg`** laden und doppelklicken.
+2. Im Fenster, das sich öffnet, `MacCleaner` auf den Ordner **Programme** ziehen.
+3. MacCleaner aus dem Ordner Programme starten und beim Hinweis auf **„Öffnen“** klicken.
 
-**Warum warnt macOS beim ersten Öffnen?** MacCleaner ist ein kostenloses Hobby-Projekt und nicht bei Apple
-gegen Gebühr „beglaubigt“. Beim ersten Start daher: *Systemeinstellungen → Datenschutz & Sicherheit →
-„Dennoch öffnen“*. Danach startet die App ganz normal.
+Alternativ gibt es `MacCleaner.zip` (praktisch zum Weiterschicken, z. B. per Messenger): doppelklicken,
+`MacCleaner.app` in **Programme** ziehen. Die beiliegende **„Bitte zuerst lesen.html“** erklärt alles Schritt für Schritt.
+
+Die App ist mit einer Apple-Developer-ID signiert und bei Apple beglaubigt (notarisiert). macOS fragt beim
+ersten Start deshalb nur kurz nach, ob du sie öffnen willst.
 
 Für Aufräumen und Malware-Suche braucht MacCleaner den **Festplattenvollzugriff**
 (*Systemeinstellungen → Datenschutz & Sicherheit → Festplattenvollzugriff*). Die App erklärt das unter Einstellungen.
@@ -43,7 +47,7 @@ Braucht Xcode.
 
 ```bash
 ./build.sh --install     # bauen, nach /Applications kopieren und starten
-./build.sh --public      # Paket für die Weitergabe: build/MacCleaner.zip
+./build.sh --public      # Weitergabe: build/MacCleaner.zip und build/MacCleaner.dmg (signiert + beglaubigt, wenn Developer ID vorhanden)
 ```
 
 Selbsttest, der nichts verändert:
@@ -67,7 +71,8 @@ Entstanden mit Hilfe von Claude (KI-Assistent von Anthropic).
 
 MacCleaner is a free, open-source menu bar app for macOS 15+ that cleans caches and old files, uninstalls apps
 with their leftovers, finds large and duplicate files, shows memory usage, checks security settings and scans for
-known adware/malware, modified (cracked) apps and browser extensions. It never deletes directly (everything goes to
-the Trash) and sends no data to the internet. The interface is in German.
-Download `MacCleaner.zip` from **Releases**; on first launch allow it under
-*System Settings → Privacy & Security → Open Anyway*.
+known adware/malware, modified (cracked) apps and browser extensions. "Meine Tools" collects all tools as tiles,
+including Time Machine local snapshots, AI-app junk, app permissions and a screen-cleaning mode. It never deletes
+directly (everything goes to the Trash) and sends no data to the internet. The interface is in German.
+Download `MacCleaner.dmg` (or `MacCleaner.zip`) from **Releases** and drag the app to Applications.
+The app is signed with a Developer ID and notarized.

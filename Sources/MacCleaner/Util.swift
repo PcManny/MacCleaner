@@ -268,7 +268,7 @@ enum SettingsPane {
     static let firewall = "x-apple.systempreferences:com.apple.Network-Settings.extension?Firewall"
     static let profiles = "x-apple.systempreferences:com.apple.Profiles-Settings.extension"
     static let loginItems = "x-apple.systempreferences:com.apple.LoginItems-Settings.extension"
-    private static let privacy = "x-apple.systempreferences:com.apple.preference.security"
+    static let privacy = "x-apple.systempreferences:com.apple.preference.security"
     static let screenCapture = privacy + "?Privacy_ScreenCapture"
     static let accessibility = privacy + "?Privacy_Accessibility"
     static let inputMonitoring = privacy + "?Privacy_ListenEvent"

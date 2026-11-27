@@ -19,18 +19,11 @@ enum SelfTest {
 
         let apps = AppScanner.findApps()
         line("== Programme: \(apps.count) gefunden")
-        for name in ["TeamViewer", "CleanMyMac", "Parallels Desktop"] {
-            guard let app = apps.first(where: { $0.name.hasPrefix(name) }) else { continue }
+        for app in apps.filter({ $0.bundleID != nil }).prefix(3) {
             let found = AppScanner.leftovers(for: app)
             line("  \(app.name) (\(app.bundleID ?? "-")): \(found.filter { $0.2 }.count) Reste, \(found.filter { !$0.2 }.count) vom Hersteller")
             for f in found.prefix(8) { line("     \(mark(f.2)) \(Fmt.path(f.0.path))") }
         }
-        // Already-removed app as an example: are its leftovers (incl. old version 4) found?
-        let fake = AppEntry(url: URL(fileURLWithPath: "/Applications/CleanMyMac_5.app"), name: "CleanMyMac_5",
-                            bundleID: "com.macpaw.CleanMyMac5")
-        let fakeFound = AppScanner.leftovers(for: fake)
-        line("  Probe CleanMyMac_5 (entfernt): \(fakeFound.filter { $0.2 }.count) Reste vorausgewählt, \(fakeFound.filter { !$0.2 }.count) nicht")
-        for f in fakeFound { line("     \(mark(f.2)) \(Fmt.path(f.0.path)) – \(f.1)") }
         let orphans = AppScanner.orphans(installed: apps)
         line("== Reste ohne Programm: \(orphans.count)")
         for o in orphans.prefix(10) { line("  \(Fmt.path(o.0.path)) – \(o.1)") }

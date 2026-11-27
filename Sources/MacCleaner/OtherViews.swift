@@ -3,13 +3,15 @@ import SwiftUI
 
 struct SpaceView: View {
     @ObservedObject var m = SpaceModel.shared
-    @State private var mode = 0
+    @ObservedObject var nav = Nav.shared
+    private var mode: Int { nav.mode[.space] ?? 0 }
+    private var modeBinding: Binding<Int> { Binding(get: { nav.mode[.space] ?? 0 }, set: { nav.mode[.space] = $0 }) }
     @State private var pendingTrash: SpaceEntry?
 
     var body: some View {
         VStack(spacing: 0) {
             PageHeader(title: "Speicherfresser", subtitle: "Finde heraus, was deinen Speicher belegt.") {
-                Picker("", selection: $mode) {
+                Picker("", selection: modeBinding) {
                     Text("Ordner").tag(0)
                     Text("Große Dateien").tag(1)
                     Text("Duplikate").tag(2)

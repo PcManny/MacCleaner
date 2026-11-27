@@ -3,6 +3,7 @@ import SwiftUI
 
 enum Page: String, CaseIterable, Identifiable, Hashable {
     case overview = "Übersicht"
+    case myTools = "Meine Tools"
     case cleanup = "Aufräumen"
     case uninstall = "Programme entfernen"
     case space = "Speicherfresser"
@@ -14,9 +15,26 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
 
     var id: String { rawValue }
 
+    /// Colour of the rounded square behind the sidebar icon (like System Settings).
+    var color: Color {
+        switch self {
+        case .overview: Brand.blue
+        case .myTools: .yellow
+        case .cleanup: .green
+        case .uninstall: .red
+        case .space: .orange
+        case .memory: .teal
+        case .security: .indigo
+        case .malware: .pink
+        case .maintenance: .brown
+        case .settings: .gray
+        }
+    }
+
     var icon: String {
         switch self {
         case .overview: "gauge.with.dots.needle.33percent"
+        case .myTools: "star.fill"
         case .cleanup: "sparkles"
         case .uninstall: "trash"
         case .space: "chart.pie"
@@ -33,6 +51,8 @@ enum Page: String, CaseIterable, Identifiable, Hashable {
 final class Nav: ObservableObject {
     static let shared = Nav()
     @Published var page: Page? = .overview
+    /// Which tab a page opens on (e.g. Speicherfresser → Duplikate), set by "Meine Tools".
+    @Published var mode: [Page: Int] = [:]
     var openWindow: (() -> Void)?
 
     func show(_ p: Page) {
@@ -52,6 +72,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 exit(0)
             }
+            return
+        }
+        if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLine.arguments.count {
+            // Developer aid: render the overview card and sidebar into a PNG.
+            let out = CommandLine.arguments[i + 1]
+            Task { @MainActor in await Snapshot.write(to: out); exit(0) }
             return
         }
         if CommandLine.arguments.contains("--selftest") {
@@ -126,7 +152,8 @@ struct MenuPopover: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Label("MacCleaner", systemImage: "sparkles").font(.headline)
+                Label { Text("MacCleaner") } icon: { Image(nsImage: MenuBarIcon.image).foregroundStyle(Brand.blue) }
+                    .font(.headline)
                 Spacer()
                 Text("\(Fmt.bytes(disk.free)) frei").foregroundStyle(.secondary)
             }
@@ -170,6 +197,7 @@ struct MenuPopover: View {
         }
         .padding(14)
         .frame(width: 310)
+        .tint(Brand.blue)
         .onAppear {
             Nav.shared.openWindow = { openWindow(id: "main") }
             disk.refresh()
@@ -204,7 +232,7 @@ struct MainView: View {
             List(selection: $nav.page) {
                 ForEach(Page.allCases) { p in
                     NavigationLink(value: p) {
-                        Label(p.rawValue, systemImage: p.icon)
+                        Label { Text(p.rawValue) } icon: { IconTile(symbol: p.icon, color: p.color) }
                             .badge(p == .security && sec.issueCount > 0 ? sec.issueCount : 0)
                     }
                 }
@@ -213,6 +241,7 @@ struct MainView: View {
         } detail: {
             switch nav.page ?? .overview {
             case .overview: OverviewView()
+            case .myTools: MyToolsView()
             case .cleanup: CleanupView()
             case .uninstall: UninstallView()
             case .space: SpaceView()
@@ -223,5 +252,6 @@ struct MainView: View {
             case .settings: SettingsView()
             }
         }
+        .tint(Brand.blue)
     }
 }

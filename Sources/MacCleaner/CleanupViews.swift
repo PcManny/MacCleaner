@@ -6,6 +6,9 @@ struct OverviewView: View {
     @ObservedObject var sec = SecurityModel.shared
     @ObservedObject var mal = MalwareModel.shared
     @ObservedObject var mem = MemoryModel.shared
+    @State private var confirmQuick = false
+    @State private var checking = false
+    @State private var checked = false
 
     var body: some View {
         ScrollView {
@@ -13,9 +16,14 @@ struct OverviewView: View {
                 PageHeader(title: "Übersicht", subtitle: "Dein Mac auf einen Blick.") { EmptyView() }
                     .padding(.horizontal, -20)
 
+                quickCleanCard
+
                 Card {
                     HStack {
-                        Label("Macintosh HD", systemImage: "internaldrive").font(.headline)
+                        HStack(spacing: 8) {
+                            IconTile(symbol: "internaldrive", color: .gray, size: 24)
+                            Text("Macintosh HD").font(.headline)
+                        }
                         Spacer()
                         Text("\(Fmt.bytes(disk.free)) frei").font(.headline)
                     }
@@ -26,7 +34,7 @@ struct OverviewView: View {
 
                 HStack(alignment: .top, spacing: 16) {
                     Card {
-                        Label("Aufräumen", systemImage: "sparkles").font(.headline)
+                        CardTitle(title: "Aufräumen", page: .cleanup)
                         if clean.scanning {
                             ProgressView().controlSize(.small)
                         } else {
@@ -36,7 +44,7 @@ struct OverviewView: View {
                         Button("Ansehen") { Nav.shared.page = .cleanup }
                     }
                     Card {
-                        Label("Sicherheit", systemImage: "lock.shield").font(.headline)
+                        CardTitle(title: "Sicherheit", page: .security)
                         if sec.scanning && sec.lastScan == nil {
                             ProgressView().controlSize(.small)
                         } else {
@@ -49,14 +57,14 @@ struct OverviewView: View {
                         Button("Details") { Nav.shared.page = .security }
                     }
                     Card {
-                        Label("Speicher", systemImage: "chart.pie").font(.headline)
+                        CardTitle(title: "Speicher", page: .space)
                         Text("Große Ordner, große Dateien und doppelte Dateien finden.").foregroundStyle(.secondary)
                         Button("Speicherfresser") { Nav.shared.page = .space }
                     }
                 }
                 HStack(alignment: .top, spacing: 16) {
                     Card {
-                        Label("Malware-Suche", systemImage: "ladybug").font(.headline)
+                        CardTitle(title: "Malware-Suche", page: .malware)
                         HStack {
                             LevelIcon(level: mal.lastScan == nil ? .info : (mal.problems.isEmpty ? .ok : .danger))
                             Text(mal.statusText).font(.title2.weight(.semibold))
@@ -66,7 +74,7 @@ struct OverviewView: View {
                         Button(mal.lastScan == nil ? "Jetzt prüfen" : "Details") { Nav.shared.page = .malware }
                     }
                     Card {
-                        Label("Arbeitsspeicher", systemImage: "memorychip").font(.headline)
+                        CardTitle(title: "Arbeitsspeicher", page: .memory)
                         HStack {
                             LevelIcon(level: mem.stats.pressure.level)
                             Text(mem.stats.pressure.text).font(.title2.weight(.semibold))
@@ -85,11 +93,113 @@ struct OverviewView: View {
             }
             .padding(20)
         }
+        .confirmationDialog("Alles aufräumen?", isPresented: $confirmQuick) {
+            Button("In den Papierkorb legen") { Task { await clean.quickClean(emptyTrash: false) } }
+            Button("Aufräumen und Papierkorb leeren", role: .destructive) { Task { await clean.quickClean(emptyTrash: true) } }
+        } message: {
+            Text("\(clean.safeCategories.map(\.name).joined(separator: ", ")) – zusammen \(Fmt.bytes(clean.safeTotal)). Das wird von den Programmen bei Bedarf neu angelegt.\n\n„Papierkorb leeren“ löscht danach endgültig alles im Papierkorb – auch Dinge, die du selbst hineingelegt hast (\(Fmt.bytes(clean.trashTotal))).")
+        }
         .task {
             mem.stats = MemoryStats.snapshot()
             if clean.lastScan == nil { await clean.scan() }
             if sec.lastScan == nil { await sec.scan() }
         }
+    }
+}
+
+extension OverviewView {
+    /// Runs all checks at once, like a "smart care" routine.
+    func fullCheck() async {
+        checking = true
+        mem.stats = MemoryStats.snapshot()
+        async let a: Void = clean.scan()
+        async let b: Void = sec.scan()
+        async let c: Void = mal.scan()
+        _ = await (a, b, c)
+        checking = false
+        withAnimation { checked = true }
+    }
+
+    /// Four small results inside the blue card.
+    var checkResults: some View {
+        HStack(spacing: 8) {
+            result("Aufräumen", Fmt.bytes(clean.safeTotal), clean.safeTotal > 0 ? "sparkles" : "checkmark") { Nav.shared.page = .cleanup }
+            result("Malware", mal.problems.isEmpty ? "nichts gefunden" : "\(mal.problems.count) Funde",
+                   mal.problems.isEmpty ? "checkmark" : "exclamationmark.triangle.fill") { Nav.shared.page = .malware }
+            result("Sicherheit", sec.statusText, sec.issueCount == 0 ? "checkmark" : "exclamationmark.triangle.fill") { Nav.shared.page = .security }
+            result("Speicher", mem.stats.pressure.text, "memorychip") { Nav.shared.page = .memory }
+        }
+    }
+
+    private func result(_ title: String, _ value: String, _ icon: String, open: @escaping () -> Void) -> some View {
+        Button(action: open) {
+            VStack(alignment: .leading, spacing: 2) {
+                Label(title, systemImage: icon).font(.caption.weight(.semibold)).opacity(0.85)
+                Text(value).font(.callout.weight(.bold)).lineLimit(1).minimumScaleFactor(0.7)
+            }
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white.opacity(0.14), in: RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Big blue card with the one-click cleanup.
+    var quickCleanCard: some View {
+        HStack(alignment: .center, spacing: 20) {
+            Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 84, height: 84)
+                .shadow(color: .black.opacity(0.25), radius: 6, y: 3)
+            VStack(alignment: .leading, spacing: 4) {
+                if clean.scanning && clean.lastScan == nil {
+                    Text("Dein Mac wird geprüft …").font(.title2.bold())
+                    ProgressView().controlSize(.small).tint(.white)
+                } else if clean.cleaning {
+                    Text("Wird aufgeräumt …").font(.title2.bold())
+                    ProgressView().controlSize(.small).tint(.white)
+                } else if clean.safeTotal > 0 {
+                    Text("\(Fmt.bytes(clean.safeTotal)) können sicher weg").font(.system(size: 26, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                    Text("Caches, Protokolle und Zwischenstände – werden bei Bedarf neu angelegt.")
+                        .opacity(0.85)
+                } else {
+                    Text("Alles sauber").font(.system(size: 26, weight: .bold))
+                    Text("Gerade gibt es nichts Sicheres aufzuräumen.").opacity(0.85)
+                }
+                if let msg = clean.quickMessage {
+                    Label(msg, systemImage: "checkmark.circle.fill").font(.callout.weight(.medium)).padding(.top, 4)
+                }
+                if checked { checkResults.padding(.top, 8) }
+            }
+            Spacer(minLength: 10)
+            VStack(spacing: 10) {
+            Button { Task { await fullCheck() } } label: {
+                Label(checking ? "Prüft …" : "Rundum-Check", systemImage: "checkmark.shield")
+                    .font(.callout.weight(.semibold))
+                    .padding(.horizontal, 16).padding(.vertical, 8)
+                    .background(.white.opacity(0.18), in: Capsule())
+                    .foregroundStyle(.white)
+            }
+            .buttonStyle(.plain)
+            .disabled(checking)
+            .help("Prüft Aufräumen, Malware, Sicherheit und Arbeitsspeicher auf einmal")
+            Button { confirmQuick = true } label: {
+                Label("Alles aufräumen", systemImage: "sparkles")
+                    .font(.title3.weight(.semibold))
+                    .padding(.horizontal, 22).padding(.vertical, 12)
+                    .background(Brand.orange.gradient, in: Capsule())
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.25), radius: 4, y: 2)
+            }
+            .buttonStyle(.plain)
+            .disabled(clean.scanning || clean.cleaning || clean.safeTotal == 0)
+            .opacity(clean.safeTotal == 0 ? 0.5 : 1)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(colors: [Color(red: 0.25, green: 0.66, blue: 0.96), Brand.blue, Brand.deepBlue], startPoint: .topLeading, endPoint: .bottomTrailing),
+            in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -184,7 +294,9 @@ struct CategoryRow: View {
 
 struct UninstallView: View {
     @ObservedObject var m = UninstallModel.shared
-    @State private var mode = 0
+    @ObservedObject var nav = Nav.shared
+    private var mode: Int { nav.mode[.uninstall] ?? 0 }
+    private var modeBinding: Binding<Int> { Binding(get: { nav.mode[.uninstall] ?? 0 }, set: { nav.mode[.uninstall] = $0 }) }
     @State private var confirm = false
     @State private var confirmOrphans = false
 
@@ -192,7 +304,7 @@ struct UninstallView: View {
         VStack(spacing: 0) {
             PageHeader(title: "Programme entfernen",
                        subtitle: "Entfernt ein Programm samt Einstellungen, Caches und Hintergrunddiensten.") {
-                Picker("", selection: $mode) {
+                Picker("", selection: modeBinding) {
                     Text("Programme").tag(0)
                     Text("Reste ohne Programm").tag(1)
                 }
